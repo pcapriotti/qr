@@ -5,7 +5,7 @@ import Data.Array
 
 type Coord = (Int, Int)
 type Version = Int
-data Module = Unknown | Light | Dark
+data Module = Unknown | Reserved | Light | Dark
   deriving (Eq, Ord, Read, Show, Enum)
 type Matrix = Array Coord Module
 
@@ -54,9 +54,6 @@ alignment 38 = [6, 32, 58, 84, 110, 136, 162]
 alignment 39 = [6, 26, 54, 82, 110, 138, 166]
 alignment 40 = [6, 30, 58, 86, 114, 142, 170]
 
-reserved :: Version -> Coord -> Bool
-reserved = undefined
-
 neighbours :: Int -> Coord -> [Coord]
 neighbours k (x, y) = concat
   [ (,) <$> [x-k,x+k] <*> [y-k..y+k]
@@ -96,6 +93,18 @@ timingPatterns v = pattern ++ map swap pattern
 darkModule :: Version -> [(Coord, Module)]
 darkModule v = [((4 * v + 9, 8), Dark)]
 
+reservedAreas :: Version -> [(Coord, Module)]
+reservedAreas v = [(x, Reserved) | x <- cs]
+  where
+    sz = size v
+    sym x y = [(x, y), (y, x)]
+    cs = (8,8)
+       : [c | y <- [0 .. 5] ++ [7] ++ [sz - 8 .. sz - 1]
+            , c <- sym 8 y ]
+      ++ [c | x <- [sz - 11 .. sz - 9]
+            , y <- [0 .. 5]
+            , c <- sym x y ]
+
 mkMatrix :: Version -> [(Coord, Module)] -> Matrix
 mkMatrix v ms = accumArray max Unknown ((0, 0), (sz-1, sz-1)) ms
   where
@@ -105,6 +114,7 @@ showModule :: Module -> Char
 showModule Light = '-'
 showModule Dark = '*'
 showModule Unknown = ' '
+showModule Reserved = 'x'
 
 showMatrix :: Matrix -> String
 showMatrix m = unlines $ map row [0 .. h]

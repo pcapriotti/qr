@@ -13,12 +13,13 @@ import Layout
 
 main :: IO ()
 main = do
-  let v = 8
+  let v = 13
   let m = mkMatrix v $ concat
           [ finderPatterns v
           , alignmentPatterns v
           , timingPatterns v
-          , darkModule v ]
+          , darkModule v
+          , reservedAreas v ]
   runGUI m
 
 runGUI :: Matrix -> IO ()
@@ -60,6 +61,7 @@ drawWindow window m = liftIO $ do
   renderWithDrawable cr $ do
     let setColor Light = Cairo.setSourceRGB 1 1 1
         setColor Dark = Cairo.setSourceRGB 0 0 0
+        setColor Reserved = Cairo.setSourceRGB 0.0 0.0 0.8
         setColor Unknown = Cairo.setSourceRGB 0.8 0.8 0.8
     let drawTile md (y, x) = do
           Cairo.rectangle
