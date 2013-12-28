@@ -95,7 +95,7 @@ timingPatterns v = pattern ++ map swap pattern
     swap ((x, y), t) = ((y, x), t)
 
 darkModule :: Version -> [(Coord, Module)]
-darkModule v = [((4 * v + 9, 8), Dark)]
+darkModule v = [((8, 4 * v + 9), Dark)]
 
 reservedAreas :: Version -> [(Coord, Module)]
 reservedAreas v = [(x, Reserved) | x <- cs]
