@@ -93,6 +93,9 @@ timingPatterns v = pattern ++ map swap pattern
     col x = if x `mod` 2 == 0 then Dark else Light
     swap ((x, y), t) = ((y, x), t)
 
+darkModule :: Version -> [(Coord, Module)]
+darkModule v = [((4 * v + 9, 8), Dark)]
+
 mkMatrix :: Version -> [(Coord, Module)] -> Matrix
 mkMatrix v ms = accumArray max Unknown ((0, 0), (sz-1, sz-1)) ms
   where

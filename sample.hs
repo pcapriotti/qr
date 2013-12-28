@@ -17,7 +17,8 @@ main = do
   let m = mkMatrix v $ concat
           [ finderPatterns v
           , alignmentPatterns v
-          , timingPatterns v ]
+          , timingPatterns v
+          , darkModule v ]
   runGUI m
 
 runGUI :: Matrix -> IO ()
