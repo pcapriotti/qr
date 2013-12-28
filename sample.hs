@@ -14,7 +14,10 @@ import Layout
 main :: IO ()
 main = do
   let v = 8
-  let m = mkMatrix v (finderPatterns v ++ alignmentPatterns v)
+  let m = mkMatrix v $ concat
+          [ finderPatterns v
+          , alignmentPatterns v
+          , timingPatterns v ]
   runGUI m
 
 runGUI :: Matrix -> IO ()
@@ -54,14 +57,25 @@ drawWindow window m = liftIO $ do
       offsety = (wyi - mult * (ysize + 1)) `div` 2
   cr <- widgetGetDrawWindow window
   renderWithDrawable cr $ do
-    let drawTile Dark (y, x) = do
+    let setColor Light = Cairo.setSourceRGB 1 1 1
+        setColor Dark = Cairo.setSourceRGB 0 0 0
+        setColor Unknown = Cairo.setSourceRGB 0.8 0.8 0.8
+    let drawTile md (y, x) = do
           Cairo.rectangle
             (fromIntegral (offsetx + x * mult))
             (fromIntegral (offsety + y * mult))
             (fromIntegral mult)
             (fromIntegral mult)
+          setColor md
           Cairo.fill
-        drawTile Light _ = return ()
+          Cairo.rectangle
+            (fromIntegral (offsetx + x * mult))
+            (fromIntegral (offsety + y * mult))
+            (fromIntegral mult)
+            (fromIntegral mult)
+          Cairo.setSourceRGB 0.3 0.3 0.3
+          Cairo.stroke
+    Cairo.setLineWidth 0.1
     forM_ (A.assocs m) $ \(p, t) -> do
       drawTile t p
   return True

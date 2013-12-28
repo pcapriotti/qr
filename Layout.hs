@@ -5,7 +5,7 @@ import Data.Array
 
 type Coord = (Int, Int)
 type Version = Int
-data Module = Light | Dark
+data Module = Unknown | Light | Dark
   deriving (Eq, Ord, Read, Show, Enum)
 type Matrix = Array Coord Module
 
@@ -85,14 +85,23 @@ finderPatterns v = centers >>= pattern
                              , valid x ]
     valid (x, y) = x >= 0 && x < sz && y >= 0 && y < sz
 
+timingPatterns :: Version -> [(Coord, Module)]
+timingPatterns v = pattern ++ map swap pattern
+  where
+    sz = size v
+    pattern = [((x, 6), col x) | x <- [8 .. sz - 9]]
+    col x = if x `mod` 2 == 0 then Dark else Light
+    swap ((x, y), t) = ((y, x), t)
+
 mkMatrix :: Version -> [(Coord, Module)] -> Matrix
-mkMatrix v ms = accumArray max Light ((0, 0), (sz-1, sz-1)) ms
+mkMatrix v ms = accumArray max Unknown ((0, 0), (sz-1, sz-1)) ms
   where
     sz = size v
 
 showModule :: Module -> Char
-showModule Light = ' '
+showModule Light = '-'
 showModule Dark = '*'
+showModule Unknown = ' '
 
 showMatrix :: Matrix -> String
 showMatrix m = unlines $ map row [0 .. h]
