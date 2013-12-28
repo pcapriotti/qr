@@ -2,6 +2,10 @@ module Layout where
 
 import Control.Applicative
 import Data.Array
+import Data.Bits
+import Data.Word
+
+import Debug.Trace
 
 type Coord = (Int, Int)
 type Version = Int
@@ -105,11 +109,6 @@ reservedAreas v = [(x, Reserved) | x <- cs]
             , y <- [0 .. 5]
             , c <- sym x y ]
 
-mkMatrix :: Version -> [(Coord, Module)] -> Matrix
-mkMatrix v ms = accumArray max Empty ((0, 0), (sz-1, sz-1)) ms
-  where
-    sz = size v
-
 showModule :: Module -> Char
 showModule Light = '-'
 showModule Dark = '*'
@@ -135,3 +134,36 @@ placement m = filter available cs
           , c <- [(x, y), (x-1, y)] ]
     cols = [n, n-2 .. 8] ++ [5, 3, 1]
     cs = cols >>= line
+
+placeBits :: Matrix -> [Word8] -> [(Coord, Module)]
+placeBits m = placeWords (placement m)
+  where
+    bits :: Word8 -> [Module]
+    bits w = map (\mask -> if w .&. mask == 0 then Light else Dark)
+                 (take 8 (iterate (`shiftR` 1) 0x80))
+
+    placeWord :: [Coord] -> Word8 -> ([Coord], [(Coord, Module)])
+    placeWord cs w = case splitAt 8 cs of
+      (cs1, cs') -> (cs', zip cs1 (bits w))
+
+    placeWords :: [Coord] -> [Word8] -> [(Coord, Module)]
+    placeWords [] _ = []
+    placeWords _ [] = []
+    placeWords cs (w : ws') = case placeWord cs w of
+      (cs', ms) -> ms ++ placeWords cs' ws'
+
+mkMatrix :: Version -> [(Coord, Module)] -> Matrix
+mkMatrix v ms = accumArray max Empty ((0, 0), (sz-1, sz-1)) ms
+  where
+    sz = size v
+
+unmaskedMatrix :: Version -> [Word8] -> Matrix
+unmaskedMatrix v ws = m // (trace (show (take 20 updates)) updates)
+  where
+    updates = placeBits m ws
+    m = mkMatrix v $ concat
+      [ finderPatterns v
+      , alignmentPatterns v
+      , timingPatterns v
+      , darkModule v
+      , reservedAreas v ]

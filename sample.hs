@@ -6,21 +6,19 @@ import Control.Monad.Trans.Class
 import Control.Monad.Trans.Maybe
 import qualified Data.Array as A
 import Data.IORef
+import Data.Char
 import qualified Graphics.Rendering.Cairo as Cairo
 import Graphics.UI.Gtk hiding (Target)
 
 import Layout
 
+txt :: String
+txt = "After placing the data and error correction bits into the matrix, the QR code specification requires that a mask pattern be applied to the data and error correction bits. The purpose of this step is to reduce the number of hard-to-read patterns in the matrix. Continue to the next section to learn about data masking."
+
 main :: IO ()
 main = do
   let v = 7
-  let m = mkMatrix v $ concat
-          [ finderPatterns v
-          , alignmentPatterns v
-          , timingPatterns v
-          , darkModule v
-          , reservedAreas v ]
-  print $ take 20 (placement m)
+  let m = unmaskedMatrix v $ map (fromIntegral . ord) txt
   runGUI m
 
 runGUI :: Matrix -> IO ()
@@ -64,7 +62,7 @@ drawWindow window m = liftIO $ do
         setColor Dark = Cairo.setSourceRGB 0 0 0
         setColor Reserved = Cairo.setSourceRGB 0.0 0.0 0.8
         setColor Empty = Cairo.setSourceRGB 0.8 0.8 0.8
-    let drawTile md (y, x) = do
+    let drawTile md (x, y) = do
           Cairo.rectangle
             (fromIntegral (offsetx + x * mult))
             (fromIntegral (offsety + y * mult))
@@ -82,9 +80,9 @@ drawWindow window m = liftIO $ do
     Cairo.setLineWidth 0.1
     forM_ (A.assocs m) $ \(p, t) -> do
       drawTile t p
-    Cairo.setSourceRGB 0.0 0.7 0.0
-    forM_ (zip [0 :: Int ..] (placement m)) $ \(i, (x, y)) -> do
-      Cairo.moveTo (fromIntegral (offsetx + x * mult))
-                   (fromIntegral (offsety + (y + 1) * mult))
-      Cairo.showText (show i)
+--    Cairo.setSourceRGB 0.0 0.7 0.0
+--    forM_ (zip [0 :: Int ..] (placement m)) $ \(i, (x, y)) -> do
+--      Cairo.moveTo (fromIntegral (offsetx + x * mult))
+--                   (fromIntegral (offsety + (y + 1) * mult))
+--      Cairo.showText (show i)
   return True
