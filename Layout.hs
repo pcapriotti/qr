@@ -3,9 +3,9 @@ module Layout where
 import Control.Applicative
 import Data.Array
 import Data.Bits
+import Data.Function
+import Data.List
 import Data.Word
-
-import Debug.Trace
 
 type Coord = (Int, Int)
 type Version = Int
@@ -58,6 +58,16 @@ alignment 38 = [6, 32, 58, 84, 110, 136, 162]
 alignment 39 = [6, 26, 54, 82, 110, 138, 166]
 alignment 40 = [6, 30, 58, 86, 114, 142, 170]
 
+maskModule :: Int -> Coord -> Bool
+maskModule 0 (x, y) = (x + y) `mod` 2 == 0
+maskModule 1 (_, y) = y `mod` 2 == 0
+maskModule 2 (x, _) = x `mod` 3 == 0
+maskModule 3 (x, y) = (x + y) `mod` 3 == 0
+maskModule 4 (x, y) = (x `div` 3 + y `div` 2) `mod` 2 == 0
+maskModule 5 (x, y) = let z = x * y in z `mod` 2 + z `mod` 3 == 0
+maskModule 6 (x, y) = let z = x * y in (z `mod` 2 + z `mod` 3) `mod` 2 == 0
+maskModule 7 (x, y) = ((x + y) `mod` 2 + (x * y) `mod` 3) `mod` 2 == 0
+
 neighbours :: Int -> Coord -> [Coord]
 neighbours k (x, y) = concat
   [ (,) <$> [x-k,x+k] <*> [y-k..y+k]
@@ -97,17 +107,19 @@ timingPatterns v = pattern ++ map swap pattern
 darkModule :: Version -> [(Coord, Module)]
 darkModule v = [((8, 4 * v + 9), Dark)]
 
-reservedAreas :: Version -> [(Coord, Module)]
-reservedAreas v = [(x, Reserved) | x <- cs]
+reservedAreas :: Version -> [Coord]
+reservedAreas v = (8,8)
+    : [c | y <- [0 .. 5] ++ [7] ++ [sz - 8 .. sz - 1]
+         , c <- sym 8 y ]
+   ++ [c | x <- [sz - 11 .. sz - 9]
+         , y <- [0 .. 5]
+         , c <- sym x y ]
   where
     sz = size v
     sym x y = [(x, y), (y, x)]
-    cs = (8,8)
-       : [c | y <- [0 .. 5] ++ [7] ++ [sz - 8 .. sz - 1]
-            , c <- sym 8 y ]
-      ++ [c | x <- [sz - 11 .. sz - 9]
-            , y <- [0 .. 5]
-            , c <- sym x y ]
+
+reservedPatterns :: Version -> [(Coord, Module)]
+reservedPatterns v = [(c, Reserved) | c <- reservedAreas v]
 
 showModule :: Module -> Char
 showModule Light = '-'
@@ -157,13 +169,77 @@ mkMatrix v ms = accumArray max Empty ((0, 0), (sz-1, sz-1)) ms
   where
     sz = size v
 
-unmaskedMatrix :: Version -> [Word8] -> Matrix
-unmaskedMatrix v ws = m // (trace (show (take 20 updates)) updates)
+baseMatrix :: Version -> Matrix
+baseMatrix v = mkMatrix v $ concat
+  [ finderPatterns v
+  , alignmentPatterns v
+  , timingPatterns v
+  , darkModule v
+  , reservedPatterns v ]
+
+maskedMatrices :: Version -> [Word8] -> [Matrix]
+maskedMatrices v ws = map (\i -> mat // allBits i) [0..7]
   where
-    updates = placeBits m ws
-    m = mkMatrix v $ concat
-      [ finderPatterns v
-      , alignmentPatterns v
-      , timingPatterns v
-      , darkModule v
-      , reservedAreas v ]
+    mat = baseMatrix v
+    ms = placeBits mat ws
+    maskedBits i = map (\(c, m) -> (c, if maskModule i c then invert m else m)) ms
+    reservedBits = [(c, Light) | c <- reservedAreas v]
+    allBits i = maskedBits i ++ reservedBits
+
+    invert Light = Dark
+    invert Dark = Light
+    invert m = m
+
+encode0 :: Version -> [Word8] -> Matrix
+encode0 v ws = minimumBy (compare `on` score) (maskedMatrices v ws)
+
+rle :: Eq a => [a] -> [(a, Int)]
+rle [] = []
+rle (x : xs) = case span (== x) xs of
+  (xs1, xs') -> (x, length xs1 + 1) : rle xs'
+
+score1 :: Matrix -> Int
+score1 m = sum (map s rows) + sum (map s cols)
+  where
+    (_, (n, _)) = bounds m
+    s = sum . map s0 . rle
+    s0 (_, i)
+      | i < 5 = 0
+      | otherwise = i - 2
+    rows = [[m ! (x , y) | x <- [0..n]] | y <- [0..n]]
+    cols = [[m ! (x , y) | y <- [0..n]] | x <- [0..n]]
+
+score2 :: Matrix -> Int
+score2 m = 3 * length (filter solid (indices m))
+  where
+    solid (x, y) = and
+      [ x > 0, y > 0
+      , m ! (x - 1, y) == c
+      , m ! (x, y - 1) == c
+      , m ! (x - 1, y - 1) == c ]
+      where c = m ! (x, y)
+
+score3 :: Matrix -> Int
+score3 m = 40 * length found
+  where
+    cs = indices m
+    pt = [ Dark, Light, Dark, Dark, Dark, Light
+         , Dark, Light, Light, Light, Light ]
+    pts = [pt, reverse pt]
+    found = filter (matches (\x y -> m ! (x, y))) cs
+         ++ filter (matches (\x y -> m ! (y, x))) cs
+    matches mat (x, y) = and
+      [ x > 10
+      , map (mat y) [x - 10 .. x] `elem` pts ]
+
+score4 :: Matrix -> Int
+score4 m = 10 * deviation
+  where
+    (_, (n, _)) = bounds m
+    darks = length (filter (== Dark) (elems m))
+    total = (n + 1) * (n + 1)
+    deviation = truncate (abs (fromIntegral darks * (20 :: Double)
+                               / fromIntegral total - 10))
+
+score :: Matrix -> Int
+score m = score1 m + score2 m + score3 m + score4 m
