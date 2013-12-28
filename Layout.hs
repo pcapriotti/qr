@@ -5,7 +5,7 @@ import Data.Array
 
 type Coord = (Int, Int)
 type Version = Int
-data Module = Unknown | Reserved | Light | Dark
+data Module = Empty | Reserved | Light | Dark
   deriving (Eq, Ord, Read, Show, Enum)
 type Matrix = Array Coord Module
 
@@ -106,14 +106,14 @@ reservedAreas v = [(x, Reserved) | x <- cs]
             , c <- sym x y ]
 
 mkMatrix :: Version -> [(Coord, Module)] -> Matrix
-mkMatrix v ms = accumArray max Unknown ((0, 0), (sz-1, sz-1)) ms
+mkMatrix v ms = accumArray max Empty ((0, 0), (sz-1, sz-1)) ms
   where
     sz = size v
 
 showModule :: Module -> Char
 showModule Light = '-'
 showModule Dark = '*'
-showModule Unknown = ' '
+showModule Empty = ' '
 showModule Reserved = 'x'
 
 showMatrix :: Matrix -> String
@@ -122,3 +122,16 @@ showMatrix m = unlines $ map row [0 .. h]
     (_, (w, h)) = bounds m
     row y = map (\x -> tile x y) [0 .. w]
     tile x y = showModule $ m ! (x, y)
+
+placement :: Matrix -> [Coord]
+placement m = filter available cs
+  where
+    available c = m ! c == Empty
+    (_, (_, n)) = bounds m
+    line x =
+      [ c | y <- if x `mod` 4 == 0
+                      then [n, n-1 .. 0]
+                      else [0 .. n]
+          , c <- [(x, y), (x-1, y)] ]
+    cols = [n, n-2 .. 8] ++ [5, 3, 1]
+    cs = cols >>= line
