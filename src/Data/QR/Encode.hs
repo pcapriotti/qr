@@ -1,9 +1,10 @@
-module Encode where
+module Data.QR.Encode where
 
 import qualified Codec.Binary.UTF8.String as UTF8
 import Data.Char
 import Data.Word
-import Types
+
+import Data.QR.Types
 
 countLength :: Version -> Mode -> Int
 countLength v m = f c m

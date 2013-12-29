@@ -1,4 +1,4 @@
-module ReedSolomon
+module Data.QR.ReedSolomon
   ( errorWords
   ) where
 

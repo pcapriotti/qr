@@ -1,11 +1,11 @@
-module Grouping where
+module Data.QR.Grouping where
 
 import Data.List
 import Data.Word
 
-import Types
-import ReedSolomon
-import Encode
+import Data.QR.Types
+import Data.QR.ReedSolomon
+import Data.QR.Encode
 
 data Grouping = Grouping
   { group1 :: Group

@@ -1,4 +1,4 @@
-module Types where
+module Data.QR.Types where
 
 import Data.List
 import Data.Word

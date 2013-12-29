@@ -1,4 +1,4 @@
-module Layout where
+module Data.QR.Layout where
 
 import Control.Applicative
 import Data.Array
@@ -7,7 +7,7 @@ import Data.Function
 import Data.List
 import Data.Word
 
-import Types
+import Data.QR.Types
 
 type Coord = (Int, Int)
 data Module = Empty | Reserved | Light | Dark

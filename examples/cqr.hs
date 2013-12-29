@@ -9,9 +9,9 @@ import Data.IORef
 import qualified Graphics.Rendering.Cairo as Cairo
 import Graphics.UI.Gtk hiding (Target)
 
-import Layout
-import Grouping
-import Types
+import Data.QR.Layout
+import Data.QR.Grouping
+import Data.QR.Types
 
 txt :: String
 txt = "This is a test"
