@@ -222,41 +222,13 @@ score :: Matrix -> Int
 score m = score1 m + score2 m + score3 m + score4 m
 
 formatInfo :: Level -> Int -> [Bit]
-formatInfo l k = pats !! (levelIndex l * 8 + k)
+formatInfo l k = toBinary 15 $ pats !! (levelIndex l * 8 + k)
   where
-    pats =
-      [ [O, O, O, Z, O, O, O, O, O, Z, Z, Z, O, Z, Z]
-      , [O, O, O, Z, Z, O, Z, O, O, O, O, Z, Z, O, O]
-      , [O, O, O, O, O, Z, O, O, Z, O, Z, O, Z, O, Z]
-      , [O, O, O, O, Z, Z, Z, O, Z, Z, O, O, O, Z, O]
-      , [O, O, Z, Z, O, O, Z, Z, Z, O, Z, O, O, O, O]
-      , [O, O, Z, Z, Z, O, O, Z, Z, Z, O, O, Z, Z, Z]
-      , [O, O, Z, O, O, Z, Z, Z, O, Z, Z, Z, Z, Z, O]
-      , [O, O, Z, O, Z, Z, O, Z, O, O, O, Z, O, O, Z]
-      , [O, Z, O, Z, O, Z, Z, Z, Z, Z, O, Z, Z, O, Z]
-      , [O, Z, O, Z, Z, Z, O, Z, Z, O, Z, Z, O, Z, O]
-      , [O, Z, O, O, O, O, Z, Z, O, O, O, O, O, Z, Z]
-      , [O, Z, O, O, Z, O, O, Z, O, Z, Z, O, Z, O, O]
-      , [O, Z, Z, Z, O, Z, O, O, O, O, O, O, Z, Z, O]
-      , [O, Z, Z, Z, Z, Z, Z, O, O, Z, Z, O, O, O, Z]
-      , [O, Z, Z, O, O, O, O, O, Z, Z, O, Z, O, O, O]
-      , [O, Z, Z, O, Z, O, Z, O, Z, O, Z, Z, Z, Z, Z]
-      , [Z, O, O, Z, O, Z, O, Z, O, Z, O, O, O, O, O]
-      , [Z, O, O, Z, Z, Z, Z, Z, O, O, Z, O, Z, Z, Z]
-      , [Z, O, O, O, O, O, O, Z, Z, O, O, Z, Z, Z, O]
-      , [Z, O, O, O, Z, O, Z, Z, Z, Z, Z, Z, O, O, Z]
-      , [Z, O, Z, Z, O, Z, Z, O, Z, O, O, Z, O, Z, Z]
-      , [Z, O, Z, Z, Z, Z, O, O, Z, Z, Z, Z, Z, O, O]
-      , [Z, O, Z, O, O, O, Z, O, O, Z, O, O, Z, O, Z]
-      , [Z, O, Z, O, Z, O, O, O, O, O, Z, O, O, Z, O]
-      , [Z, Z, O, Z, O, O, Z, O, Z, Z, Z, O, Z, Z, O]
-      , [Z, Z, O, Z, Z, O, O, O, Z, O, O, O, O, O, Z]
-      , [Z, Z, O, O, O, Z, Z, O, O, O, Z, Z, O, O, O]
-      , [Z, Z, O, O, Z, Z, O, O, O, Z, O, Z, Z, Z, Z]
-      , [Z, Z, Z, Z, O, O, O, Z, O, O, Z, Z, Z, O, Z]
-      , [Z, Z, Z, Z, Z, O, Z, Z, O, Z, O, Z, O, Z, O]
-      , [Z, Z, Z, O, O, Z, O, Z, Z, Z, Z, O, O, Z, Z]
-      , [Z, Z, Z, O, Z, Z, Z, Z, Z, O, O, O, Z, O, O]]
+    pats = [ 30660, 29427, 32170, 30877, 26159, 25368, 27713
+           , 26998, 21522, 20773, 24188, 23371, 17913, 16590
+           , 20375, 19104, 13663, 12392, 16177, 14854, 9396
+           , 8579, 11994, 11245, 5769, 5054, 7399, 6608, 1890
+           , 597, 3340, 2107]
 
 alignment :: Version -> [Int]
 alignment 1 = []

@@ -3,21 +3,7 @@ module Encode where
 import qualified Codec.Binary.UTF8.String as UTF8
 import Data.Char
 import Data.Word
-import Data.List
 import Types
-
-toBinary :: Integral a => Int -> a -> [Bit]
-toBinary = go []
-  where
-    go bs n 0 = replicate n Z ++ bs
-    go bs n x = case divMod x 2 of
-      (x', b) -> go ((if b == 0 then Z else O) : bs) (n - 1) x'
-
-toWords :: [Bit] -> [Word8]
-toWords = map toWord . chunksOf 8
-
-toWord :: [Bit] -> Word8
-toWord = foldl' (\x b -> x + x + (if b == Z then 0 else 1)) 0
 
 countLength :: Version -> Mode -> Int
 countLength v m = f c m
@@ -80,11 +66,6 @@ encode v l m xs = toWords $ take total $ base ++ pad8 ++ cycle padding
     total = dataBits v l
     pad8 = replicate ((-(length base)) `mod` 8) Z
     padding = [O,O,O,Z,O,O,Z,Z,Z,Z,Z,O,Z,Z,Z,O]
-
-chunksOf :: Int -> [a] -> [[a]]
-chunksOf _ [] = []
-chunksOf n xs = case splitAt n xs of
-  (xs1, xs') -> xs1 : chunksOf n xs'
 
 dataBits :: Version -> Level -> Int
 dataBits v l = values !! ((v - 1) * 4 + levelIndex l)
