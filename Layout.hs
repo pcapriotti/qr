@@ -211,15 +211,14 @@ score2 m = 3 * length (filter solid (indices m))
 score3 :: Matrix -> Int
 score3 m = 40 * length found
   where
-    cs = indices m
+    (_, (n, _)) = bounds m
+    cs = range ((11,11),(n,n))
     pt = [ Dark, Light, Dark, Dark, Dark, Light
          , Dark, Light, Light, Light, Light ]
     pts = [pt, reverse pt]
     found = filter (matches (\x y -> m ! (x, y))) cs
          ++ filter (matches (\x y -> m ! (y, x))) cs
-    matches mat (x, y) = and
-      [ x > 10
-      , map (mat y) [x - 10 .. x] `elem` pts ]
+    matches mat (x, y) = map (mat y) [x - 10 .. x] `elem` pts
 
 score4 :: Matrix -> Int
 score4 m = 10 * deviation
