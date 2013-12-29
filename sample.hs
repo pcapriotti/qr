@@ -18,7 +18,7 @@ txt = "This is a test"
 
 main :: IO ()
 main = do
-  let v = 3
+  let v = 8
       l = Q
       m = Byte
       ws = message v l m txt

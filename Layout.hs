@@ -161,10 +161,22 @@ formatBits l k m = zip cs1 info ++ zip cs2 info
        ++ [(8, y) | y <- [7,5,4,3,2,1,0]]
     cs2 = [(8, y) | y <- [n, n-1 .. n-7]]
        ++ [(x, 8) | x <- [n-6, n-5 .. n]]
+
     info = map bitToModule $ formatInfo l k
 
+versionBits :: Version -> Matrix -> [(Coord, Module)]
+versionBits v m | v > 6 = zip cs1 info ++ zip cs2 info
+                | otherwise = []
+  where
+    (_, (n,_)) = bounds m
+    cs1 = [(x, y) | x <- [5,4,3,2,1,0]
+                  , y <- [n-8,n-9,n-10]]
+    cs2 = [(x, y) | y <- [5,4,3,2,1,0]
+                  , x <- [n-8,n-9,n-10]]
+    info = map bitToModule $ versionInfo v
+
 layout :: Version -> Level -> [Word8] -> Matrix
-layout v l ws = mat // formatBits l k mat
+layout v l ws = mat // (formatBits l k mat ++ versionBits v mat)
   where
     mats = zip [0..] (maskedMatrices v ws)
     (k, mat) = minimumBy (compare `on` matScore) mats
@@ -224,11 +236,22 @@ score m = score1 m + score2 m + score3 m + score4 m
 formatInfo :: Level -> Int -> [Bit]
 formatInfo l k = toBinary 15 $ pats !! (levelIndex l * 8 + k)
   where
+    pats :: [Int]
     pats = [ 30660, 29427, 32170, 30877, 26159, 25368, 27713
            , 26998, 21522, 20773, 24188, 23371, 17913, 16590
            , 20375, 19104, 13663, 12392, 16177, 14854, 9396
            , 8579, 11994, 11245, 5769, 5054, 7399, 6608, 1890
            , 597, 3340, 2107]
+
+versionInfo :: Version -> [Bit]
+versionInfo v = toBinary 18 $ pats !! (v - 7)
+  where
+    pats :: [Int]
+    pats = [ 31892, 34236, 39577, 42195, 48118, 51042, 55367
+           , 58893, 63784, 68472, 70749, 76311, 79154, 84390
+           , 87683, 92361, 96236, 102084, 102881, 110507, 110734
+           , 117786, 119615, 126325, 127568, 133589, 136944
+           , 141498, 145311, 150283, 152622, 158308, 161089, 167017]
 
 alignment :: Version -> [Int]
 alignment 1 = []
