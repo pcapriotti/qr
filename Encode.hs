@@ -14,9 +14,6 @@ instance Show Bit where
   show Z = "0"
   show O = "1"
 
-data Level = L | M | Q | H
-  deriving (Eq, Ord, Read, Show, Enum)
-
 toBinary :: Integral a => Int -> a -> [Bit]
 toBinary = go []
   where

@@ -1,7 +1,12 @@
 module Example where
 
 import Data.Array
+import Data.Word
 import Layout
+import Encode
+import Grouping
+import Types
+import ReedSolomon
 
 c :: Char -> Module
 c ' ' = Light
@@ -32,3 +37,69 @@ ex0 = listArray ((0, 0), (20, 20)) (map c txt)
       , "x xxx x x   xxxx x  x"
       , "x     x x xx x   x xx"
       , "xxxxxxx     xxxx    x" ]
+
+ex1 :: [Word8]
+ex1 = map toWord bits
+  where
+    bits = [ [ Z, O, Z, Z, Z, Z, O, O]
+           , [ Z, O, Z, O, Z, O, Z, O]
+           , [ Z, O, Z, Z, Z, O, O, Z]
+           , [ O, Z, Z, Z, Z, O, O, Z]
+           , [ Z, O, Z, O, Z, O, O, O]
+           , [ Z, Z, O, Z, Z, O, O, Z]
+           , [ Z, O, Z, O, Z, O, Z, O]
+           , [ O, O, Z, Z, Z, Z, O, Z]
+           , [ Z, O, O, O, Z, O, O, O]
+           , [ Z, Z, O, O, Z, Z, O, Z]
+           , [ Z, Z, Z, Z, Z, O, O, Z]
+           , [ Z, Z, Z, O, Z, Z, O, Z]
+           , [ Z, Z, Z, Z, Z, O, O, Z]
+           , [ Z, O, O, Z, Z, O, O, O]
+           , [ Z, Z, O, Z, Z, O, O, Z]
+           , [ O, O, O, O, Z, O, O, Z]
+           , [ O, O, O, O, Z, O, O, Z]
+           , [ Z, O, Z, Z, Z, Z, O, Z]
+           , [ Z, Z, Z, Z, Z, O, O, O]
+           , [ Z, O, O, O, Z, O, O, Z]
+           , [ O, Z, Z, Z, Z, O, O, Z]
+           , [ O, O, O, O, Z, Z, O, Z]
+           , [ Z, Z, Z, Z, Z, O, O, O]
+           , [ Z, Z, O, Z, Z, O, O, Z]
+           , [ Z, O, Z, O, Z, O, O, Z]
+           , [ Z, Z, Z, O, Z, O, O, Z]
+           , [ O, O, Z, Z, Z, O, O, Z]
+           , [ O, O, Z, Z, Z, O, O, O]
+           , [ O, Z, Z, O, Z, Z, O, Z]
+           , [ Z, Z, Z, Z, Z, O, O, Z]
+           , [ O, Z, O, O, Z, O, O, Z]
+           , [ O, O, O, Z, Z, O, O, Z]
+           , [ O, O, O, O, Z, O, O, O]
+           , [ Z, O, O, O, Z, O, O, O]
+           , [ Z, Z, O, O, Z, Z, O, Z]
+           , [ Z, Z, Z, Z, Z, O, O, O]
+           , [ Z, O, O, O, Z, O, O, Z]
+           , [ O, Z, Z, Z, Z, O, O, Z]
+           , [ Z, O, Z, O, Z, O, O, O]
+           , [ Z, Z, O, Z, Z, O, O, Z]
+           , [ Z, O, Z, O, Z, Z, O, Z]
+           , [ Z, Z, Z, Z, Z, O, O, Z]
+           , [ O, Z, Z, Z, Z, O, O, Z]
+           , [ O, Z, Z, O, Z, O, O, O]
+           , [ Z, Z, O, O, Z, Z, O, Z]
+           , [ Z, Z, Z, Z, Z, O, O, O]
+           , [ Z, O, Z, Z, Z, O, O, Z]
+           , [ O, O, O, O, Z, O, O, O]
+           , [ Z, O, O, O, Z, O, O, Z]
+           , [ Z, O, Z, O, Z, O, O, Z]
+           , [ O, O, Z, Z, Z, Z, O, Z]
+           , [ Z, Z, Z, Z, Z, O, O, Z]
+           , [ O, Z, Z, O, Z, O, O, O]
+           , [ Z, Z, O, O, Z, Z, O, Z]
+           , [ Z, Z, Z, O, Z, Z, Z, Z]
+           , [ O, O, O, Z, O, O, Z, Z]
+           , [ Z, Z, Z, O, Z, Z, Z, O]
+           , [ O, O, O, Z, O, O, Z, Z]
+           , [ Z, Z, Z, O, Z, Z, Z, O]
+           , [ O, O, O, Z, O, O, Z, Z]
+           , [ Z, Z, Z, O, Z, Z, Z, O]
+           , [ O, O, O, Z, O, O, Z, Z] ]

@@ -119,7 +119,7 @@ placeBits m = placeWords (placement m)
 
     placeWords :: [Coord] -> [Word8] -> [(Coord, Module)]
     placeWords [] _ = []
-    placeWords _ [] = []
+    placeWords cs [] = zip cs (repeat Light)
     placeWords cs (w : ws') = case placeWord cs w of
       (cs', ms) -> ms ++ placeWords cs' ws'
 
