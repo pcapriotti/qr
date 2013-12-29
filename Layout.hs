@@ -68,8 +68,8 @@ darkModule v = [((8, 4 * v + 9), Dark)]
 
 reservedAreas :: Version -> [Coord]
 reservedAreas v = (8,8)
-    : [c | y <- [0 .. 5] ++ [7] ++ [sz - 8 .. sz - 1]
-         , c <- sym 8 y ]
+    : [(8, y) | y <- [0 .. 5] ++ [7] ++ [sz - 7 .. sz - 1] ]
+   ++ [(x, 8) | x <- [0 .. 5] ++ [7] ++ [sz - 8 .. sz - 1] ]
    ++ [c | v >= 7
          , x <- [sz - 11 .. sz - 9]
          , y <- [0 .. 5]
@@ -99,12 +99,11 @@ placement m = filter available cs
   where
     available c = m ! c == Empty
     (_, (_, n)) = bounds m
-    line x =
-      [ c | y <- if x `mod` 4 == 0
-                      then [n, n-1 .. 0]
-                      else [0 .. n]
+    line (x, r) =
+      [ c | y <- if r then [n, n-1 .. 0] else [0 .. n]
           , c <- [(x, y), (x-1, y)] ]
-    cols = [n, n-2 .. 8] ++ [5, 3, 1]
+    cols = zip ([n, n-2 .. 8] ++ [5, 3, 1])
+               (cycle [True, False])
     cs = cols >>= line
 
 placeBits :: Matrix -> [Word8] -> [(Coord, Module)]

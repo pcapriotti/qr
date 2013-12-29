@@ -21,10 +21,14 @@ main = do
   let v = 1
       l = Q
       m = Alpha
-      cw = message v l m txt
-  print cw
-  let mat = encode0 v cw
-  runGUI mat
+      ws = message v l m txt
+  let mat0 = baseMatrix v
+      mat = mat0 A.// placeBits mat0 ws
+      matm0 = maskedMatrices v ws !! 0
+      matmb = encode0 v ws
+  forM_ (maskedMatrices v ws) $ \mmat ->
+    print (score mmat)
+  runGUI matmb
 
 runGUI :: Matrix -> IO ()
 runGUI m = do
