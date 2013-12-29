@@ -37,13 +37,8 @@ fullMessage v l ws = interleave blocks ++ interleave ec
     ec = map (errorWords (ecSize gpng)) blocks
 
 grouping :: Version -> Level -> Grouping
-grouping v l = gps !! ((v - 1) * 4 + idx l)
+grouping v l = gps !! ((v - 1) * 4 + levelIndex l)
   where
-    idx L = 0
-    idx M = 1
-    idx Q = 2
-    idx H = 3
-
     gp :: Int -> Int -> Int -> Int -> Int -> Grouping
     gp ec g1 b1 g2 b2 = Grouping (Group g1 b1) (Group g2 b2) ec
 

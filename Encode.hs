@@ -6,13 +6,6 @@ import Data.Word
 import Data.List
 import Types
 
-data Bit = Z | O
-  deriving (Eq, Ord, Read)
-
-instance Show Bit where
-  show Z = "0"
-  show O = "1"
-
 toBinary :: Integral a => Int -> a -> [Bit]
 toBinary = go []
   where
@@ -94,12 +87,8 @@ chunksOf n xs = case splitAt n xs of
   (xs1, xs') -> xs1 : chunksOf n xs'
 
 dataBits :: Version -> Level -> Int
-dataBits v l = values !! ((v - 1) * 4 + idx l)
+dataBits v l = values !! ((v - 1) * 4 + levelIndex l)
     where
-      idx L = 0
-      idx M = 1
-      idx Q = 2
-      idx H = 3
       values =
         [ 152, 128, 104, 72
         , 272, 224, 176, 128

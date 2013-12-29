@@ -14,21 +14,16 @@ import Grouping
 import Types
 
 txt :: String
-txt = "HELLO WORLD"
+txt = "This is a test"
 
 main :: IO ()
 main = do
-  let v = 1
+  let v = 3
       l = Q
-      m = Alpha
+      m = Byte
       ws = message v l m txt
-  let mat0 = baseMatrix v
-      mat = mat0 A.// placeBits mat0 ws
-      matm0 = maskedMatrices v ws !! 0
-      matmb = encode0 v ws
-  forM_ (maskedMatrices v ws) $ \mmat ->
-    print (score mmat)
-  runGUI matmb
+      mat = layout v l ws
+  runGUI mat
 
 runGUI :: Matrix -> IO ()
 runGUI m = do

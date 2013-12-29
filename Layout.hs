@@ -17,6 +17,10 @@ type Matrix = Array Coord Module
 size :: Version -> Int
 size v = v * 4 + 17
 
+bitToModule :: Bit -> Module
+bitToModule Z = Light
+bitToModule O = Dark
+
 maskModule :: Int -> Coord -> Bool
 maskModule 0 (x, y) = (x + y) `mod` 2 == 0
 maskModule 1 (_, y) = y `mod` 2 == 0
@@ -149,8 +153,22 @@ maskedMatrices v ws = map (\i -> mat // allBits i) [0..7]
     invert Dark = Light
     invert m = m
 
-encode0 :: Version -> [Word8] -> Matrix
-encode0 v ws = minimumBy (compare `on` score) (maskedMatrices v ws)
+formatBits :: Level -> Int -> Matrix -> [(Coord, Module)]
+formatBits l k m = zip cs1 info ++ zip cs2 info
+  where
+    (_, (n,_)) = bounds m
+    cs1 = [(x, 8) | x <- [0,1,2,3,4,5,7,8]]
+       ++ [(8, y) | y <- [7,5,4,3,2,1,0]]
+    cs2 = [(8, y) | y <- [n, n-1 .. n-7]]
+       ++ [(x, 8) | x <- [n-6, n-5 .. n]]
+    info = map bitToModule $ formatInfo l k
+
+layout :: Version -> Level -> [Word8] -> Matrix
+layout v l ws = mat // formatBits l k mat
+  where
+    mats = zip [0..] (maskedMatrices v ws)
+    (k, mat) = minimumBy (compare `on` matScore) mats
+    matScore (_, m) = score m
 
 rle :: Eq a => [a] -> [(a, Int)]
 rle [] = []
@@ -202,6 +220,43 @@ score4 m = 10 * deviation
 
 score :: Matrix -> Int
 score m = score1 m + score2 m + score3 m + score4 m
+
+formatInfo :: Level -> Int -> [Bit]
+formatInfo l k = pats !! (levelIndex l * 8 + k)
+  where
+    pats =
+      [ [O, O, O, Z, O, O, O, O, O, Z, Z, Z, O, Z, Z]
+      , [O, O, O, Z, Z, O, Z, O, O, O, O, Z, Z, O, O]
+      , [O, O, O, O, O, Z, O, O, Z, O, Z, O, Z, O, Z]
+      , [O, O, O, O, Z, Z, Z, O, Z, Z, O, O, O, Z, O]
+      , [O, O, Z, Z, O, O, Z, Z, Z, O, Z, O, O, O, O]
+      , [O, O, Z, Z, Z, O, O, Z, Z, Z, O, O, Z, Z, Z]
+      , [O, O, Z, O, O, Z, Z, Z, O, Z, Z, Z, Z, Z, O]
+      , [O, O, Z, O, Z, Z, O, Z, O, O, O, Z, O, O, Z]
+      , [O, Z, O, Z, O, Z, Z, Z, Z, Z, O, Z, Z, O, Z]
+      , [O, Z, O, Z, Z, Z, O, Z, Z, O, Z, Z, O, Z, O]
+      , [O, Z, O, O, O, O, Z, Z, O, O, O, O, O, Z, Z]
+      , [O, Z, O, O, Z, O, O, Z, O, Z, Z, O, Z, O, O]
+      , [O, Z, Z, Z, O, Z, O, O, O, O, O, O, Z, Z, O]
+      , [O, Z, Z, Z, Z, Z, Z, O, O, Z, Z, O, O, O, Z]
+      , [O, Z, Z, O, O, O, O, O, Z, Z, O, Z, O, O, O]
+      , [O, Z, Z, O, Z, O, Z, O, Z, O, Z, Z, Z, Z, Z]
+      , [Z, O, O, Z, O, Z, O, Z, O, Z, O, O, O, O, O]
+      , [Z, O, O, Z, Z, Z, Z, Z, O, O, Z, O, Z, Z, Z]
+      , [Z, O, O, O, O, O, O, Z, Z, O, O, Z, Z, Z, O]
+      , [Z, O, O, O, Z, O, Z, Z, Z, Z, Z, Z, O, O, Z]
+      , [Z, O, Z, Z, O, Z, Z, O, Z, O, O, Z, O, Z, Z]
+      , [Z, O, Z, Z, Z, Z, O, O, Z, Z, Z, Z, Z, O, O]
+      , [Z, O, Z, O, O, O, Z, O, O, Z, O, O, Z, O, Z]
+      , [Z, O, Z, O, Z, O, O, O, O, O, Z, O, O, Z, O]
+      , [Z, Z, O, Z, O, O, Z, O, Z, Z, Z, O, Z, Z, O]
+      , [Z, Z, O, Z, Z, O, O, O, Z, O, O, O, O, O, Z]
+      , [Z, Z, O, O, O, Z, Z, O, O, O, Z, Z, O, O, O]
+      , [Z, Z, O, O, Z, Z, O, O, O, Z, O, Z, Z, Z, Z]
+      , [Z, Z, Z, Z, O, O, O, Z, O, O, Z, Z, Z, O, Z]
+      , [Z, Z, Z, Z, Z, O, Z, Z, O, Z, O, Z, O, Z, O]
+      , [Z, Z, Z, O, O, Z, O, Z, Z, Z, Z, O, O, Z, Z]
+      , [Z, Z, Z, O, Z, Z, Z, Z, Z, O, O, O, Z, O, O]]
 
 alignment :: Version -> [Int]
 alignment 1 = []
