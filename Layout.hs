@@ -70,7 +70,8 @@ reservedAreas :: Version -> [Coord]
 reservedAreas v = (8,8)
     : [c | y <- [0 .. 5] ++ [7] ++ [sz - 8 .. sz - 1]
          , c <- sym 8 y ]
-   ++ [c | x <- [sz - 11 .. sz - 9]
+   ++ [c | v >= 7
+         , x <- [sz - 11 .. sz - 9]
          , y <- [0 .. 5]
          , c <- sym x y ]
   where

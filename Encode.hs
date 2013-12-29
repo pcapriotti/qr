@@ -6,7 +6,6 @@ import Data.Word
 import Data.List
 import Types
 
-data Mode = Numeric | Alpha | Byte
 data Bit = Z | O
   deriving (Eq, Ord, Read)
 

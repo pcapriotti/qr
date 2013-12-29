@@ -6,20 +6,25 @@ import Control.Monad.Trans.Class
 import Control.Monad.Trans.Maybe
 import qualified Data.Array as A
 import Data.IORef
-import Data.Char
 import qualified Graphics.Rendering.Cairo as Cairo
 import Graphics.UI.Gtk hiding (Target)
 
 import Layout
+import Grouping
+import Types
 
 txt :: String
-txt = "After placing the data and error correction bits into the matrix, the QR code specification requires that a mask pattern be applied to the data and error correction bits. The purpose of this step is to reduce the number of hard-to-read patterns in the matrix. Continue to the next section to learn about data masking."
+txt = "HELLO WORLD"
 
 main :: IO ()
 main = do
-  let v = 7
-  let m = unmaskedMatrix v $ map (fromIntegral . ord) txt
-  runGUI m
+  let v = 1
+      l = Q
+      m = Alpha
+      cw = message v l m txt
+  print cw
+  let mat = encode0 v cw
+  runGUI mat
 
 runGUI :: Matrix -> IO ()
 runGUI m = do
