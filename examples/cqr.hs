@@ -8,22 +8,43 @@ import qualified Data.Array as A
 import Data.IORef
 import qualified Graphics.Rendering.Cairo as Cairo
 import Graphics.UI.Gtk hiding (Target)
+import Options.Applicative
 
 import Data.QR.Layout
 import Data.QR.Grouping
 import Data.QR.Types
 
-txt :: String
-txt = "This is a test"
+data Opts = Opts
+  { optVersion :: Version
+  , optLevel :: Level
+  , optMode :: Mode
+  , optText :: String }
+
+opts :: Parser Opts
+opts = Opts
+  <$> option ( long "symversion"
+            <> short 'V'
+            <> metavar "NUMBER"
+            <> help "Version of the QR code: 1 to 40" )
+  <*> option ( long "level"
+            <> short 'l'
+            <> metavar "{LMQH}"
+            <> help "Error correction level (default: Q)"
+            <> value Q )
+  <*> option ( long "mode"
+            <> short 'm'
+            <> metavar "MODE"
+            <> help "Encoding mode: Numeric, Alpha or Byte (default)"
+            <> value Byte )
+  <*> argument str ( metavar "TEXT" )
+
+matrix :: Opts -> Matrix
+matrix (Opts v l m txt) = layout v l (message v l m txt)
 
 main :: IO ()
 main = do
-  let v = 8
-      l = Q
-      m = Byte
-      ws = message v l m txt
-      mat = layout v l ws
-  runGUI mat
+  args <- execParser (info opts idm)
+  runGUI $ matrix args
 
 runGUI :: Matrix -> IO ()
 runGUI m = do

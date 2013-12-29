@@ -40,4 +40,5 @@ executable cqr
     gtk == 0.12.*,
     cairo == 0.12.*,
     transformers == 0.3.*,
+    optparse-applicative == 0.7.*,
     qr
