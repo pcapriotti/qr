@@ -7,8 +7,9 @@ import Data.Function
 import Data.List
 import Data.Word
 
+import Types
+
 type Coord = (Int, Int)
-type Version = Int
 data Module = Empty | Reserved | Light | Dark
   deriving (Eq, Ord, Read, Show, Enum)
 type Matrix = Array Coord Module

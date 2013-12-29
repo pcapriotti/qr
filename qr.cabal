@@ -16,4 +16,5 @@ executable qr
     array == 0.4.*,
     gtk == 0.12.*,
     cairo == 0.12.*,
-    transformers == 0.3.*
+    transformers == 0.3.*,
+    utf8-string == 0.3.*
