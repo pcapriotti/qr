@@ -77,8 +77,8 @@ drawWindow :: (MonadIO m, WidgetClass w)
 drawWindow window m = liftIO $ do
   let (_, (ysize, xsize)) = A.bounds m
   (wxi, wyi) <- liftIO $ widgetGetSize window
-  let multx = wxi `div` (xsize + 1)
-      multy = wyi `div` (ysize + 1)
+  let multx = wxi `div` (xsize + 9)
+      multy = wyi `div` (ysize + 9)
       mult = min multx multy
       offsetx = (wxi - mult * (xsize + 1)) `div` 2
       offsety = (wyi - mult * (ysize + 1)) `div` 2
@@ -96,16 +96,24 @@ drawWindow window m = liftIO $ do
             (fromIntegral mult)
           setColor md
           Cairo.fill
-          Cairo.rectangle
-            (fromIntegral (offsetx + x * mult))
-            (fromIntegral (offsety + y * mult))
-            (fromIntegral mult)
-            (fromIntegral mult)
-          Cairo.setSourceRGB 0.3 0.3 0.3
-          Cairo.stroke
+
+--          Cairo.rectangle
+--            (fromIntegral (offsetx + x * mult))
+--            (fromIntegral (offsety + y * mult))
+--            (fromIntegral mult)
+--            (fromIntegral mult)
+--          Cairo.setSourceRGB 0.3 0.3 0.3
+--          Cairo.stroke
+
+    -- background
+    setColor Light
+    Cairo.rectangle 0 0 (fromIntegral wxi) (fromIntegral wyi)
+    Cairo.fill
+
     Cairo.setLineWidth 0.1
     forM_ (A.assocs m) $ \(p, t) -> do
       drawTile t p
+
 --    Cairo.setSourceRGB 0.0 0.7 0.0
 --    forM_ (zip [0 :: Int ..] (placement m)) $ \(i, (x, y)) -> do
 --      Cairo.moveTo (fromIntegral (offsetx + x * mult))
