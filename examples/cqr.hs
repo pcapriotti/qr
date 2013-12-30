@@ -28,8 +28,8 @@ opts = Opts
             <> help "Version of the QR code: 1 to 40" )
   <*> option ( long "level"
             <> short 'l'
-            <> metavar "{LMQH}"
-            <> help "Error correction level (default: Q)"
+            <> metavar "LEVEL"
+            <> help "Error correction: L, M, Q (default) or H"
             <> value Q )
   <*> option ( long "mode"
             <> short 'm'
@@ -43,7 +43,8 @@ matrix (Opts v l m txt) = layout v l (message v l m txt)
 
 main :: IO ()
 main = do
-  args <- execParser (info opts idm)
+  args <- execParser $ info (opts <**> helper)
+    ( progDesc "Show a QR code" )
   runGUI $ matrix args
 
 runGUI :: Matrix -> IO ()
