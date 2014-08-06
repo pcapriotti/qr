@@ -24,6 +24,7 @@ library
     Data.QR.Grouping,
     Data.QR.Layout,
     Data.QR.ReedSolomon,
+    Data.QR.Tables,
     Data.QR.Types
   default-language: Haskell2010
 
