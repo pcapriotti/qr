@@ -72,5 +72,6 @@ encode v l m xs = toWords $ take total $ base ++ pad8 ++ cycle padding
     padding = [O,O,O,Z,O,O,Z,Z,Z,Z,Z,O,Z,Z,Z,O]
 
 minimumVersion :: Level -> Mode -> Int -> Maybe Version
-minimumVersion l m sz = listToMaybe . dropWhile (< sz) . map (capacity l m)
+minimumVersion l m sz = fmap fst . listToMaybe . dropWhile ((< sz) . snd)
+                      . zip [1..] . map (capacity l m)
                       $ [1 .. 40]

@@ -9,23 +9,26 @@ import Data.IORef
 import qualified Graphics.Rendering.Cairo as Cairo
 import Graphics.UI.Gtk hiding (Target)
 import Options.Applicative
+import System.Exit
+import System.IO
 
+import Data.QR.Encode
 import Data.QR.Layout
 import Data.QR.Grouping
 import Data.QR.Types
 
 data Opts = Opts
-  { optVersion :: Version
+  { optVersion :: Maybe Version
   , optLevel :: Level
   , optMode :: Mode
   , optText :: String }
 
 opts :: Parser Opts
 opts = Opts
-  <$> option ( long "symversion"
+  <$> (optional . option) ( long "symversion"
             <> short 'V'
             <> metavar "NUMBER"
-            <> help "Version of the QR code: 1 to 40" )
+            <> help "Version of the QR code: 1 to 40 (default: auto)" )
   <*> option ( long "level"
             <> short 'l'
             <> metavar "LEVEL"
@@ -38,14 +41,19 @@ opts = Opts
             <> value Byte )
   <*> argument str ( metavar "TEXT" )
 
-matrix :: Opts -> Matrix
-matrix (Opts v l m txt) = layout v l (message v l m txt)
+matrix :: Opts -> Maybe Matrix
+matrix (Opts mv l m txt) = do
+  v <- mv <|> minimumVersion l m (length txt)
+  return $ layout v l (message v l m txt)
 
 main :: IO ()
 main = do
   args <- execParser $ info (opts <**> helper)
     ( progDesc "Show a QR code" )
-  runGUI $ matrix args
+  case matrix args of
+    Nothing -> hPutStrLn stderr "Message too large for a QR code"
+            >> exitWith (ExitFailure 1)
+    Just m -> runGUI m
 
 runGUI :: Matrix -> IO ()
 runGUI m = do

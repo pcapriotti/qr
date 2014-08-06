@@ -51,7 +51,7 @@ dataBits v l = values !! ((v - 1) * 4 + levelIndex l)
         , 23648, 18672, 13328, 10208 ]
 
 capacity :: Level -> Mode -> Version -> Int
-capacity l m v = capacities !! (v * 16 + fromEnum l * 4 + fromEnum m)
+capacity l m v = capacities !! ((v - 1) * 16 + fromEnum l * 4 + fromEnum m)
   where
     capacities =
       [ 41, 25, 17, 10
