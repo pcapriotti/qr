@@ -66,7 +66,8 @@ encodeData Byte xs = UTF8.encode xs >>= toBinary 8
 encode :: Version -> Level -> Mode -> String -> [Word8]
 encode v l m xs = toWords $ take total $ base ++ pad8 ++ cycle padding
   where
-    base = mode m ++ count v m (length xs) ++ encodeData m xs ++ replicate 4 Z
+    base0 = mode m ++ count v m (length xs) ++ encodeData m xs
+    base = take total $ base0 ++ replicate 4 Z
     total = dataBits v l
     pad8 = replicate ((-(length base)) `mod` 8) Z
     padding = [O,O,O,Z,O,O,Z,Z,Z,Z,Z,O,Z,Z,Z,O]
