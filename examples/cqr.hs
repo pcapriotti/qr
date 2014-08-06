@@ -49,14 +49,14 @@ main = do
 
 runGUI :: Matrix -> IO ()
 runGUI m = do
-  initGUI
+  _ <- initGUI
   window <- windowNew
 
-  window `on` exposeEvent $ do
+  _ <- window `on` exposeEvent $
     drawWindow window m
-  handleResize window
+  _ <- handleResize window
 
-  onDestroy window mainQuit
+  _ <- onDestroy window mainQuit
   widgetShowAll window
   mainGUI
 
@@ -97,26 +97,12 @@ drawWindow window m = liftIO $ do
           setColor md
           Cairo.fill
 
---          Cairo.rectangle
---            (fromIntegral (offsetx + x * mult))
---            (fromIntegral (offsety + y * mult))
---            (fromIntegral mult)
---            (fromIntegral mult)
---          Cairo.setSourceRGB 0.3 0.3 0.3
---          Cairo.stroke
-
     -- background
     setColor Light
     Cairo.rectangle 0 0 (fromIntegral wxi) (fromIntegral wyi)
     Cairo.fill
 
     Cairo.setLineWidth 0.1
-    forM_ (A.assocs m) $ \(p, t) -> do
-      drawTile t p
+    forM_ (A.assocs m) $ \(p, t) -> drawTile t p
 
---    Cairo.setSourceRGB 0.0 0.7 0.0
---    forM_ (zip [0 :: Int ..] (placement m)) $ \(i, (x, y)) -> do
---      Cairo.moveTo (fromIntegral (offsetx + x * mult))
---                   (fromIntegral (offsety + (y + 1) * mult))
---      Cairo.showText (show i)
   return True
