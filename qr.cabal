@@ -17,6 +17,7 @@ library
     base == 4.6.*,
     array == 0.4.*,
     utf8-string == 0.3.*
+  ghc-options: -Wall -O2
   hs-source-dirs: src
   exposed-modules:
     Data.QR.Encode,

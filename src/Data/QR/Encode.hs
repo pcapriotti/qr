@@ -7,7 +7,7 @@ import Data.Word
 import Data.QR.Types
 
 countLength :: Version -> Mode -> Int
-countLength v m = f c m
+countLength v = f c
   where
     c | v < 10 = 0 :: Int
       | v < 27 = 1
@@ -58,6 +58,7 @@ encodeData Alpha xs = chunksOf 2 xs >>= encodeChunk
     value x
       | isAlpha x = ord (toUpper x) - ord 'A' + 10
       | isDigit x = digitToInt x
+      | otherwise = 0
 encodeData Byte xs = UTF8.encode xs >>= toBinary 8
 
 encode :: Version -> Level -> Mode -> String -> [Word8]

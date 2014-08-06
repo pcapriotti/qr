@@ -30,6 +30,7 @@ maskModule 4 (x, y) = (x `div` 3 + y `div` 2) `mod` 2 == 0
 maskModule 5 (x, y) = let z = x * y in z `mod` 2 + z `mod` 3 == 0
 maskModule 6 (x, y) = let z = x * y in (z `mod` 2 + z `mod` 3) `mod` 2 == 0
 maskModule 7 (x, y) = ((x + y) `mod` 2 + (x * y) `mod` 3) `mod` 2 == 0
+maskModule n _ = error $ "maskModule: invalid mask " ++ show n
 
 neighbours :: Int -> Coord -> [Coord]
 neighbours k (x, y) = concat
@@ -128,7 +129,7 @@ placeBits m = placeWords (placement m)
       (cs', ms) -> ms ++ placeWords cs' ws'
 
 mkMatrix :: Version -> [(Coord, Module)] -> Matrix
-mkMatrix v ms = accumArray max Empty ((0, 0), (sz-1, sz-1)) ms
+mkMatrix v = accumArray max Empty ((0, 0), (sz-1, sz-1))
   where
     sz = size v
 
@@ -293,3 +294,9 @@ alignment 37 = [6, 28, 54, 80, 106, 132, 158]
 alignment 38 = [6, 32, 58, 84, 110, 136, 162]
 alignment 39 = [6, 26, 54, 82, 110, 138, 166]
 alignment 40 = [6, 30, 58, 86, 114, 142, 170]
+alignment n = error $ "alignment: invalid version " ++ show n
+
+{-# ANN module "HLint: ignore Use ++" #-}
+{-# ANN module "HLint: ignore Use ||" #-}
+{-# ANN showMatrix "HLint: ignore Avoid lambda" #-}
+{-# ANN score3 "HLint: ignore Use curry" #-}
