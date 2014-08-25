@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 module Main where
 
 import Control.Monad
@@ -5,6 +6,8 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Maybe
 import qualified Data.Array as A
+import Data.Foldable (Foldable, asum)
+import Data.Traversable (Traversable, traverse)
 import Data.IORef
 import qualified Graphics.Rendering.Cairo as Cairo
 import Graphics.UI.Gtk hiding (Target)
@@ -17,13 +20,19 @@ import Data.QR.Layout
 import Data.QR.Grouping
 import Data.QR.Types
 
-data Opts = Opts
+data Opts s = Opts
   { optVersion :: Maybe Version
   , optLevel :: Level
   , optMode :: Mode
-  , optText :: String }
+  , optSource :: s }
+  deriving (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
 
-opts :: Parser Opts
+data Source = Text String
+            | File FilePath
+            | StdIn
+  deriving (Eq, Ord, Read, Show)
+
+opts :: Parser (Opts Source)
 opts = Opts
   <$> (optional . option) ( long "symversion"
             <> short 'V'
@@ -39,9 +48,31 @@ opts = Opts
             <> metavar "MODE"
             <> help "Encoding mode: Numeric, Alpha or Byte (default)"
             <> value Byte )
-  <*> argument str ( metavar "TEXT" )
+  <*> src
 
-matrix :: Opts -> Maybe Matrix
+fileSource :: FilePath -> Source
+fileSource "-" = StdIn
+fileSource s = File s
+
+src :: Parser Source
+src = asum
+  [ option ( long "file"
+          <> reader r
+          <> short 'f'
+          <> metavar "FILENAME"
+          <> help ( "Filename containing the data to encode "
+                 ++ "(use '-' for standard input)" ) )
+  , Text <$> argument str ( metavar "TEXT" )
+  , pure StdIn ]
+  where
+    r = fmap fileSource . str
+
+extractText :: Source -> IO String
+extractText (Text t) = pure t
+extractText StdIn = getContents
+extractText (File f) = readFile f
+
+matrix :: Opts String -> Maybe Matrix
 matrix (Opts mv l m txt) = do
   v <- mv <|> minimumVersion l m (length txt)
   return $ layout v l (message v l m txt)
@@ -50,7 +81,8 @@ main :: IO ()
 main = do
   args <- execParser $ info (opts <**> helper)
     ( progDesc "Show a QR code" )
-  case matrix args of
+  targs <- traverse extractText args
+  case matrix targs of
     Nothing -> hPutStrLn stderr "Message too large for a QR code"
             >> exitWith (ExitFailure 1)
     Just m -> runGUI m
