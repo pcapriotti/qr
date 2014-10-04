@@ -64,7 +64,7 @@ src = asum
   , Text <$> argument str ( metavar "TEXT" )
   , pure StdIn ]
   where
-    r = fmap fileSource . str
+    r = fmap fileSource str
 
 extractText :: Source -> IO String
 extractText (Text t) = pure t
