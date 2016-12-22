@@ -21,7 +21,7 @@ data Opts = Opts
   { optVersion :: Maybe Version
   , optLevel :: Level
   , optMode :: Mode
-  , optText :: String }
+  , optText :: Maybe String }
 
 opts :: Parser Opts
 opts = Opts
@@ -42,18 +42,21 @@ opts = Opts
             <> metavar "MODE"
             <> help "Encoding mode: Numeric, Alpha or Byte (default)"
             <> value Byte )
-  <*> argument str ( metavar "TEXT" )
+  <*> (optional . argument str) ( metavar "TEXT" )
 
-matrix :: Opts -> Maybe Matrix
-matrix (Opts mv l m txt) = do
-  v <- mv <|> minimumVersion l m (length txt)
-  return $ layout v l (message v l m txt)
+matrix :: Opts -> IO (Maybe Matrix)
+matrix (Opts mv l m mtxt) = do
+  txt <- maybe getContents return mtxt
+  return $ do
+    v <- mv <|> minimumVersion l m (length txt)
+    return $ layout v l (message v l m txt)
 
 main :: IO ()
 main = do
   args <- execParser $ info (opts <**> helper)
     ( progDesc "Show a QR code" )
-  case matrix args of
+  mm <- matrix args
+  case mm of
     Nothing -> hPutStrLn stderr "Message too large for a QR code"
             >> exitWith (ExitFailure 1)
     Just m -> runGUI m
