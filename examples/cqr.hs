@@ -25,16 +25,19 @@ data Opts = Opts
 
 opts :: Parser Opts
 opts = Opts
-  <$> (optional . option) ( long "symversion"
+  <$> (optional . option auto)
+             ( long "symversion"
             <> short 'V'
             <> metavar "NUMBER"
             <> help "Version of the QR code: 1 to 40 (default: auto)" )
-  <*> option ( long "level"
+  <*> option auto
+             ( long "level"
             <> short 'l'
             <> metavar "LEVEL"
             <> help "Error correction: L, M, Q (default) or H"
             <> value Q )
-  <*> option ( long "mode"
+  <*> option auto
+             ( long "mode"
             <> short 'm'
             <> metavar "MODE"
             <> help "Encoding mode: Numeric, Alpha or Byte (default)"
