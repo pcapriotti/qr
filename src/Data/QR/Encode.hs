@@ -33,8 +33,8 @@ mode = toBinary 4 . go
     go Alpha = 2
     go Byte = 4
 
-encodeData :: Mode -> String -> [Bit]
-encodeData Numeric xs = chunksOf 3 xs >>= encodeChunk
+encodeData :: Mode -> String -> (Int, [Bit])
+encodeData Numeric xs = (length xs, chunksOf 3 xs >>= encodeChunk)
   where
     encodeChunk c = case reads c of
       [(n, "")] | n >= 0 -> toBinary (bits (length c)) (n :: Int)
@@ -42,7 +42,7 @@ encodeData Numeric xs = chunksOf 3 xs >>= encodeChunk
     bits 1 = 4
     bits 2 = 7
     bits _ = 10
-encodeData Alpha xs = chunksOf 2 xs >>= encodeChunk
+encodeData Alpha xs = (length xs, chunksOf 2 xs >>= encodeChunk)
   where
     encodeChunk [x] = toBinary 6 (value x)
     encodeChunk [x, y] = toBinary 11 (value x * 45 + value y)
@@ -61,12 +61,15 @@ encodeData Alpha xs = chunksOf 2 xs >>= encodeChunk
       | isAlpha x = ord (toUpper x) - ord 'A' + 10
       | isDigit x = digitToInt x
       | otherwise = 0
-encodeData Byte xs = UTF8.encode xs >>= toBinary 8
+encodeData Byte xs = (length binData, binData >>= toBinary 8)
+  where
+    binData = UTF8.encode xs
 
 encode :: Version -> Level -> Mode -> String -> [Word8]
 encode v l m xs = toWords $ take total $ base ++ pad8 ++ cycle padding
   where
-    base0 = mode m ++ count v m (length xs) ++ encodeData m xs
+    (size, encoded) = encodeData m xs
+    base0 = mode m ++ count v m size ++ encoded
     base = take total $ base0 ++ replicate 4 Z
     total = dataBits v l
     pad8 = replicate ((-(length base)) `mod` 8) Z
