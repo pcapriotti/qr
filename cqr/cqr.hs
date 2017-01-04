@@ -7,7 +7,7 @@ import Control.Monad.Trans.Maybe
 import qualified Data.Array as A
 import Data.IORef
 import qualified Graphics.Rendering.Cairo as Cairo
-import Graphics.UI.Gtk hiding (Target)
+import Graphics.UI.Gtk hiding (Display, Target)
 import Options.Applicative
 import System.Exit
 import System.IO
@@ -21,7 +21,10 @@ data Opts = Opts
   { optVersion :: Maybe Version
   , optLevel :: Level
   , optMode :: Mode
+  , optDisplay :: Display
   , optText :: Maybe String }
+
+data Display = Cairo | Console
 
 opts :: Parser Opts
 opts = Opts
@@ -42,10 +45,23 @@ opts = Opts
             <> metavar "MODE"
             <> help "Encoding mode: Numeric, Alpha or Byte (default)"
             <> value Byte )
+  <*> option displayReader
+             ( long "display"
+            <> short 'd'
+            <> metavar "[cairo|console]"
+            <> help "Display mode"
+            <> value Cairo )
   <*> (optional . argument str) ( metavar "TEXT" )
 
+displayReader :: ReadM Display
+displayReader = eitherReader $ \s -> do
+  case s of
+    "cairo" -> return Cairo
+    "console" -> return Console
+    _ -> Left "Invalid display mode. Possible choices: cairo, console."
+
 matrix :: Opts -> IO (Maybe Matrix)
-matrix (Opts mv l m mtxt) = do
+matrix (Opts mv l m _ mtxt) = do
   txt <- maybe getContents return mtxt
   return $ do
     v <- mv <|> minimumVersion l m (length txt)
@@ -59,10 +75,25 @@ main = do
   case mm of
     Nothing -> hPutStrLn stderr "Message too large for a QR code"
             >> exitWith (ExitFailure 1)
-    Just m -> runGUI m
+    Just m -> runGUI (optDisplay args) m
 
-runGUI :: Matrix -> IO ()
-runGUI m = do
+runGUI :: Display -> Matrix -> IO ()
+runGUI Console m = do
+  let (_, (xsize, ysize)) = A.bounds m
+  let white = putStr "\ESC[47m  \ESC[0m"
+  let black = putStr "\ESC[40m  \ESC[0m"
+  replicateM_ (xsize + 3) white
+  putChar '\n'
+  forM_ [0 .. ysize] $ \y -> do
+    white
+    forM_ [0 .. xsize] $ \x -> do
+      let c = m A.! (x, y)
+      if c == Dark then black else white
+    white
+    putChar '\n'
+  replicateM_ (xsize + 3) white
+  putChar '\n'
+runGUI Cairo m = do
   _ <- initGUI
   window <- windowNew
 
@@ -89,7 +120,7 @@ handleResize window = do
 drawWindow :: (MonadIO m, WidgetClass w)
            => w -> Matrix -> m Bool
 drawWindow window m = liftIO $ do
-  let (_, (ysize, xsize)) = A.bounds m
+  let (_, (xsize, ysize)) = A.bounds m
   (wxi, wyi) <- liftIO $ widgetGetSize window
   let multx = wxi `div` (xsize + 9)
       multy = wyi `div` (ysize + 9)
