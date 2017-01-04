@@ -7,7 +7,7 @@ import Data.Word
 
 raise :: Word8 -> Word8
 raise w | w .&. 0x80 == 0 = w'
-        | otherwise       = w' `xor` 285
+        | otherwise       = w' `xor` 29
   where w' = shiftL w 1
 
 mult :: Word8 -> Word8 -> Word8
