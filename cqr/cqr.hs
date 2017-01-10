@@ -7,6 +7,7 @@ import Control.Monad.Trans.Class
 import Control.Monad.Trans.Maybe
 import qualified Data.Array as A
 import Data.Foldable (Foldable, asum)
+import Data.Monoid ((<>))
 import Data.Traversable (Traversable, traverse)
 import Data.IORef
 import qualified Graphics.Rendering.Cairo as Cairo
