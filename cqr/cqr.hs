@@ -7,6 +7,7 @@ import Control.Monad.Trans.Class
 import Control.Monad.Trans.Maybe
 import qualified Data.Array as A
 import Data.Foldable (Foldable, asum)
+import Data.Maybe
 import Data.Monoid ((<>))
 import Data.Traversable (Traversable, traverse)
 import Data.IORef
@@ -25,11 +26,20 @@ data Opts s = Opts
   { optVersion :: Maybe Version
   , optLevel :: Level
   , optMode :: Mode
-  , optDisplay :: Display
+  , optMDisplay :: Maybe Display
+  , optOutput :: Maybe FilePath
+  , optSize :: Maybe (Int, Int)
   , optSource :: s }
   deriving (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
 
-data Display = Cairo | Console
+optDisplay :: Opts s -> Display
+optDisplay args = case optMDisplay args of
+  Just d -> d
+  Nothing -> case optOutput args *> optSize args of
+    Just _ -> Image
+    Nothing -> Cairo
+
+data Display = Cairo | Console | Image
   deriving (Eq, Ord, Read, Show)
 
 data Source = Text String
@@ -56,12 +66,23 @@ opts = Opts
             <> metavar "MODE"
             <> help "Encoding mode: Numeric, Alpha or Byte (default)"
             <> value Byte )
-  <*> option displayReader
+  <*> (optional . option displayReader)
              ( long "display"
             <> short 'd'
-            <> metavar "[cairo|console]"
-            <> help "Display mode"
-            <> value Cairo )
+            <> metavar "[cairo|console|image]"
+            <> help "Display mode" )
+  <*> (optional . option str)
+             ( long "output"
+            <> short 'o'
+            <> metavar "FILE"
+            <> help "Output file (implies image display)" )
+  <*> (optional . option sizeReader)
+             ( long "size"
+            <> short 's'
+            <> metavar "WIDTH,HEIGHT"
+            <> help (concat [ "Image width and height in pixels, "
+                            , "comma separated "
+                            , "(implies image display)" ]) )
   <*> src
 
 displayReader :: ReadM Display
@@ -69,7 +90,18 @@ displayReader = eitherReader $ \s -> do
   case s of
     "cairo" -> return Cairo
     "console" -> return Console
-    _ -> Left "Invalid display mode. Possible choices: cairo, console."
+    "image" -> return Image
+    _ -> Left "Invalid display mode. Possible choices: cairo, console, image."
+
+sizeReader :: ReadM (Int, Int)
+sizeReader = eitherReader $ \s -> do
+  case break (== ',') s of
+    (x, ',':y) -> (,) <$> sread "width" x <*> sread "height" y
+    _ -> Left "Invalid size."
+  where
+    sread w x = case reads x of
+      [(v, "")] -> Right v
+      _ -> Left ("Invalid " ++ w ++ ".")
 
 fileSource :: FilePath -> Source
 fileSource "-" = StdIn
@@ -93,7 +125,7 @@ extractText StdIn = getContents
 extractText (File f) = readFile f
 
 matrix :: Opts String -> Maybe Matrix
-matrix (Opts mv l m _ txt) = do
+matrix (Opts mv l m _ _ _ txt) = do
   v <- mv <|> minimumVersion l m (length txt)
   return $ layout v l (message v l m txt)
 
@@ -105,10 +137,10 @@ main = do
   case matrix targs of
     Nothing -> hPutStrLn stderr "Message too large for a QR code"
             >> exitWith (ExitFailure 1)
-    Just m -> runGUI (optDisplay args) m
+    Just m -> runGUI args (optDisplay args) m
 
-runGUI :: Display -> Matrix -> IO ()
-runGUI Console m = do
+runGUI :: Opts s -> Display -> Matrix -> IO ()
+runGUI _ Console m = do
   let (_, (xsize, ysize)) = A.bounds m
   let white = putStr "\ESC[47m  \ESC[0m"
   let black = putStr "\ESC[40m  \ESC[0m"
@@ -123,7 +155,7 @@ runGUI Console m = do
     putChar '\n'
   replicateM_ (xsize + 3) white
   putChar '\n'
-runGUI Cairo m = do
+runGUI _ Cairo m = do
   _ <- initGUI
   window <- windowNew
 
@@ -134,6 +166,12 @@ runGUI Cairo m = do
   _ <- onDestroy window mainQuit
   widgetShowAll window
   mainGUI
+runGUI args Image m = do
+  let (w, h) = fromMaybe (300, 300) (optSize args)
+      fmt = Cairo.FormatARGB32
+  Cairo.withImageSurface fmt w h $ \surface -> do
+    Cairo.renderWith surface (drawMatrix w h m)
+    Cairo.surfaceWriteToPNG surface (fromMaybe "out.png" (optOutput args))
 
 handleResize :: WindowClass w
              => w -> IO (ConnectId w)
@@ -147,37 +185,40 @@ handleResize window = do
       widgetQueueDraw window
       writeIORef current sz
 
-drawWindow :: (MonadIO m, WidgetClass w)
-           => w -> Matrix -> m Bool
-drawWindow window m = liftIO $ do
+drawMatrix :: Int -> Int -> Matrix -> Cairo.Render ()
+drawMatrix wxi wyi m = do
   let (_, (xsize, ysize)) = A.bounds m
-  (wxi, wyi) <- liftIO $ widgetGetSize window
-  let multx = wxi `div` (xsize + 9)
+      multx = wxi `div` (xsize + 9)
       multy = wyi `div` (ysize + 9)
       mult = min multx multy
       offsetx = (wxi - mult * (xsize + 1)) `div` 2
       offsety = (wyi - mult * (ysize + 1)) `div` 2
+      setColor Light = Cairo.setSourceRGB 1 1 1
+      setColor Dark = Cairo.setSourceRGB 0 0 0
+      setColor Reserved = Cairo.setSourceRGB 0.0 0.0 0.8
+      setColor Empty = Cairo.setSourceRGB 0.8 0.8 0.8
+  let drawTile md (x, y) = do
+        Cairo.rectangle
+          (fromIntegral (offsetx + x * mult))
+          (fromIntegral (offsety + y * mult))
+          (fromIntegral mult)
+          (fromIntegral mult)
+        setColor md
+        Cairo.fill
+
+  -- background
+  setColor Light
+  Cairo.rectangle 0 0 (fromIntegral wxi) (fromIntegral wyi)
+  Cairo.fill
+
+  Cairo.setLineWidth 0.1
+  forM_ (A.assocs m) $ \(p, t) -> drawTile t p
+
+drawWindow :: (MonadIO m, WidgetClass w)
+           => w -> Matrix -> m Bool
+drawWindow window m = liftIO $ do
+  (wxi, wyi) <- liftIO $ widgetGetSize window
   cr <- widgetGetDrawWindow window
-  renderWithDrawable cr $ do
-    let setColor Light = Cairo.setSourceRGB 1 1 1
-        setColor Dark = Cairo.setSourceRGB 0 0 0
-        setColor Reserved = Cairo.setSourceRGB 0.0 0.0 0.8
-        setColor Empty = Cairo.setSourceRGB 0.8 0.8 0.8
-    let drawTile md (x, y) = do
-          Cairo.rectangle
-            (fromIntegral (offsetx + x * mult))
-            (fromIntegral (offsety + y * mult))
-            (fromIntegral mult)
-            (fromIntegral mult)
-          setColor md
-          Cairo.fill
-
-    -- background
-    setColor Light
-    Cairo.rectangle 0 0 (fromIntegral wxi) (fromIntegral wyi)
-    Cairo.fill
-
-    Cairo.setLineWidth 0.1
-    forM_ (A.assocs m) $ \(p, t) -> drawTile t p
+  renderWithDrawable cr (drawMatrix wxi wyi m)
 
   return True

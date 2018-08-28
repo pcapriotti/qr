@@ -1,6 +1,5 @@
 module Data.QR.Layout where
 
-import Control.Applicative
 import Data.Array
 import Data.Bits
 import Data.Function
