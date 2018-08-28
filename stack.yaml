@@ -1,6 +1,6 @@
-resolver: lts-7.14
+resolver: lts-10.4
 packages:
 - '.'
-extra-deps: []
+extra-deps: [gtk-0.14.7, gio-0.13.4.1]
 flags: {}
 extra-package-dbs: []
