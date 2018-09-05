@@ -10,6 +10,8 @@ addons:
       - libgmp-dev
 
 before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get --no-install-recommends install libgtksourceview-3.0-dev libwebkitgtk-3.0-dev
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
   - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
