@@ -4,8 +4,8 @@
 
 Pure Haskell QR encoder library and command line tool.
 
-![Screenshot][screenshot]
+![Screencast][screencast]
 
- [screenshot]: http://pcapriotti.github.com/qr/screenshot.png
+ [screencast]: https://raw.githubusercontent.com/pcapriotti/qr/gh-pages/cqr.gif
  [status-png]: https://travis-ci.org/pcapriotti/qr.svg
  [status]: http://travis-ci.org/pcapriotti/qr
