@@ -19,3 +19,5 @@ before_install:
 install:
   - stack --no-terminal --install-ghc build
 
+script:
+  - true
