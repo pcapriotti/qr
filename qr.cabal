@@ -29,7 +29,7 @@ executable cqr
   main-is: cqr/cqr.hs
   default-language: Haskell2010
   build-depends:
-    base,
+    base < 5,
     array,
     gtk,
     cairo,
