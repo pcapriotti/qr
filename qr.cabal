@@ -1,5 +1,6 @@
 name:                qr
 version:             0.2.0.0
+synopsis:            Pure Haskell QR encoder library and command line tool
 license:             BSD3
 license-file:        LICENSE
 author:              Paolo Capriotti
